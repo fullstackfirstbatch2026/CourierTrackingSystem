@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourierFlow | Enterprise Logistics Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="app-container">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">CF</div>
+            <h2>CourierFlow</h2>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <button class="nav-item active" onclick="showPage('dashboard')">
+                <i>📊</i> <span>Dashboard</span>
+            </button>
+            <button class="nav-item" onclick="showPage('shipments')">
+                <i>📦</i> <span>Shipments</span>
+            </button>
+            <button class="nav-item" onclick="showPage('addShipment')">
+                <i>➕</i> <span>Add Shipment</span>
+            </button>
+            <button class="nav-item" onclick="showPage('tracking')">
+                <i>🔍</i> <span>Track</span>
+            </button>
+            
+            <div class="nav-section">Management</div>
+            <button class="nav-item" onclick="showPage('couriers')">
+                <i>🚚</i> <span>Couriers</span>
+            </button>
+            <button class="nav-item" onclick="showPage('analytics')">
+                <i>📈</i> <span>Analytics</span>
+            </button>
+            <button class="nav-item" onclick="showPage('exceptions')">
+                <i>⚠️</i> <span>Exceptions</span> <span class="badge" id="exceptionsBadge">2</span>
+            </button>
+            
+            <div class="nav-section">System</div>
+            <button class="nav-item" onclick="showPage('notifications')">
+                <i>🔔</i> <span>Notifications</span> <span class="badge" id="navNotifBadge">5</span>
+            </button>
+            <button class="nav-item" onclick="showPage('settings')">
+                <i>⚙️</i> <span>Settings</span>
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button class="nav-item" onclick="toggleSidebarCollapse()" id="collapseBtn">
+                <i>⏪</i> <span>Collapse</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+                <div class="global-search">
+                    <i>🔍</i>
+                    <input type="text" id="globalSearchInput" placeholder="Search tracking #, sender, receiver, courier..." onkeyup="handleGlobalSearch(event)">
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button class="icon-btn" onclick="showPage('notifications')" title="Notifications">
+                    🔔 <span class="badge" id="topbarNotifBadge">5</span>
+                </button>
+                <button class="icon-btn" onclick="showHelp()" title="Help Center">❓</button>
+                <div class="user-profile" onclick="showPage('settings')">
+                    <div class="avatar">A</div>
+                    <div class="user-info">
+                        <h4>Admin User</h4>
+                        <span>Logistics Manager</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="page-container active">
+            <div class="page-header">
+                <div>
+                    <h1>Dashboard Overview</h1>
+                    <p>Live visibility into shipments, delivery SLA, and active courier operations.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="exportShipmentsCSV()">📥 Export Shipments</button>
+                    <button class="btn btn-secondary" onclick="loadDashboard()">🔄 Refresh</button>
+                    <button class="btn btn-primary" onclick="showPage('addShipment')">➕ New Shipment</button>
+                </div>
+            </div>
+            
+            <!-- 5 KPI CARDS -->
+            <div class="stats-grid-5">
+                <div class="stat-card">
+                    <div class="stat-icon primary">📦</div>
+                    <div class="stat-info">
+                        <h3>Total Shipments</h3>
+                        <p id="dashTotal" class="skeleton">00</p>
+                        <div class="stat-meta">
+                            <span class="trend-badge positive">+12.5%</span>
+                            <span>vs last month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">🚚</div>
+                    <div class="stat-info">
+                        <h3>In Transit</h3>
+                        <p id="dashTransit" class="skeleton">00</p>
+                        <div class="stat-meta">
+                            <span class="trend-badge positive">Active</span>
+                            <span>currently moving</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">🛵</div>
+                    <div class="stat-info">
+                        <h3>Out for Delivery</h3>
+                        <p id="dashOutDelivery" class="skeleton">00</p>
+                        <div class="stat-meta">
+                            <span class="trend-badge positive">Final Mile</span>
+                            <span>deliveries today</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">✅</div>
+                    <div class="stat-info">
+                        <h3>Delivered</h3>
+                        <p id="dashDelivered" class="skeleton">00</p>
+                        <div class="stat-meta">
+                            <span class="trend-badge positive" id="dashDeliveredTrend">95.4%</span>
+                            <span>completion rate</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Exceptions</h3>
+                        <p id="dashExceptions" class="skeleton">0</p>
+                        <div class="stat-meta">
+                            <span class="trend-badge negative">Action</span>
+                            <span>requires attention</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD QUICK ACTIONS (ShipSagar Inspired Cards) -->
+            <div class="quick-actions-grid">
+                <div class="quick-action-card" onclick="showPage('addShipment')">
+                    <div class="quick-action-icon-box new">➕</div>
+                    <div class="quick-action-text">
+                        <h4>New Shipment</h4>
+                        <p>Create & register a shipment</p>
+                    </div>
+                </div>
+                <div class="quick-action-card" onclick="showPage('tracking')">
+                    <div class="quick-action-icon-box track">🔍</div>
+                    <div class="quick-action-text">
+                        <h4>Track Shipment</h4>
+                        <p>Track package status</p>
+                    </div>
+                </div>
+                <div class="quick-action-card" onclick="showPage('exceptions')">
+                    <div class="quick-action-icon-box exception">⚠️</div>
+                    <div class="quick-action-text">
+                        <h4>View Exceptions</h4>
+                        <p>Resolve delivery issues</p>
+                    </div>
+                </div>
+                <div class="quick-action-card" onclick="exportShipmentsCSV()">
+                    <div class="quick-action-icon-box export">📥</div>
+                    <div class="quick-action-text">
+                        <h4>Export Shipments</h4>
+                        <p>Download shipment report</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT SHIPMENTS TABLE -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Recent Shipments</h2>
+                        <div class="card-subtitle">Latest operations registered in MySQL database</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="showPage('shipments')">View All Shipments →</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Courier</th>
+                                <th>Sender</th>
+                                <th>Receiver</th>
+                                <th>Route</th>
+                                <th>Status</th>
+                                <th>Last Update</th>
+                                <th>ETA</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashTableBody">
+                            <tr><td colspan="9" class="skeleton" style="height: 40px;"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SHIPMENTS PAGE -->
+        <section id="shipments" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Shipments Management</h1>
+                    <p>Search, filter, edit, track, and export real-time shipment records.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="exportShipmentsCSV()">📥 Export CSV</button>
+                    <button class="btn btn-secondary" onclick="loadShipments()">🔄 Refresh</button>
+                    <button class="btn btn-primary" onclick="showPage('addShipment')">➕ New Shipment</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <!-- SHIPMENT TABS -->
+                <div class="tabs-container" id="shipmentTabs">
+                    <button class="tab-btn active" data-tab="ALL" onclick="setShipmentTab('ALL')">
+                        All Shipments <span class="tab-badge" id="tabAllBadge">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="PENDING" onclick="setShipmentTab('PENDING')">
+                        Pending <span class="tab-badge" id="tabPendingBadge">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="IN_TRANSIT" onclick="setShipmentTab('IN_TRANSIT')">
+                        In Transit <span class="tab-badge" id="tabTransitBadge">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="OUT_FOR_DELIVERY" onclick="setShipmentTab('OUT_FOR_DELIVERY')">
+                        Out for Delivery <span class="tab-badge" id="tabDeliveryBadge">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="DELIVERED" onclick="setShipmentTab('DELIVERED')">
+                        Delivered <span class="tab-badge" id="tabDeliveredBadge">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="EXCEPTION" onclick="setShipmentTab('EXCEPTION')">
+                        Exceptions <span class="tab-badge" id="tabExceptionsBadge">0</span>
+                    </button>
+                </div>
+
+                <!-- FILTER TOOLBAR -->
+                <div class="filter-toolbar">
+                    <div class="global-search" style="max-width: 320px;">
+                        <i>🔍</i>
+                        <input type="text" id="localSearchInput" placeholder="Search tracking, sender, receiver, courier, route..." onkeyup="filterShipmentTable()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select class="filter-select" id="statusFilter" onchange="filterShipmentTable()">
+                            <option value="ALL">All Statuses</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="IN_TRANSIT">In Transit</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="EXCEPTION">Exceptions</option>
+                        </select>
+                        
+                        <select class="filter-select" id="courierFilter" onchange="filterShipmentTable()">
+                            <option value="ALL">All Couriers</option>
+                            <option value="Blue Dart">Blue Dart</option>
+                            <option value="DTDC">DTDC</option>
+                            <option value="Delhivery">Delhivery</option>
+                            <option value="Ecom Express">Ecom Express</option>
+                            <option value="XpressBees">XpressBees</option>
+                            <option value="Shadowfax">Shadowfax</option>
+                            <option value="India Post">India Post</option>
+                            <option value="FedEx">FedEx</option>
+                            <option value="DHL">DHL</option>
+                            <option value="Ekart">Ekart</option>
+                        </select>
+                        
+                        <select class="filter-select" id="dateFilter" onchange="filterShipmentTable()">
+                            <option value="ALL">All Time</option>
+                            <option value="TODAY">Today</option>
+                            <option value="WEEK">Last 7 Days</option>
+                            <option value="MONTH">This Month</option>
+                        </select>
+                        
+                        <button class="btn btn-secondary btn-sm" onclick="clearShipmentFilters()" title="Reset all filters">Clear Filters</button>
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Courier</th>
+                                <th>Sender</th>
+                                <th>Receiver</th>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Status</th>
+                                <th>Last Update</th>
+                                <th>ETA</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipmentsTableBody">
+                            <tr><td colspan="10" class="skeleton" style="height: 40px;"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION (10 per page) -->
+                <div class="pagination-container">
+                    <div class="pagination-info" id="paginationInfo">
+                        Showing 1–10 of 24 shipments
+                    </div>
+                    <div class="pagination-controls" id="paginationControls">
+                        <!-- Populated by script.js -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADD SHIPMENT -->
+        <section id="addShipment" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Create New Shipment</h1>
+                    <p>Register a package with carrier partner, origin, destination, and initial status.</p>
+                </div>
+            </div>
+            
+            <form id="createShipmentForm" onsubmit="handleCreateShipment(event)">
+                <div class="card form-section">
+                    <h2 class="form-section-title">Consignment & Logistics Partner</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label required">Tracking Number</label>
+                            <input type="text" class="form-control" id="formTracking" placeholder="e.g. CF100270" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Courier Partner</label>
+                            <select class="form-control" id="formCourier" required>
+                                <option value="Blue Dart">Blue Dart</option>
+                                <option value="DTDC">DTDC</option>
+                                <option value="Delhivery">Delhivery</option>
+                                <option value="Ecom Express">Ecom Express</option>
+                                <option value="XpressBees">XpressBees</option>
+                                <option value="Shadowfax">Shadowfax</option>
+                                <option value="India Post">India Post</option>
+                                <option value="FedEx">FedEx</option>
+                                <option value="DHL">DHL</option>
+                                <option value="Ekart">Ekart</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Initial Status</label>
+                            <select class="form-control" id="formStatus" required>
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_TRANSIT">In Transit</option>
+                                <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="EXCEPTION">Exception</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estimated Delivery Date (ETA)</label>
+                            <input type="date" class="form-control" id="formEta">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card form-section">
+                    <h2 class="form-section-title">Sender & Receiver</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label required">Sender Name</label>
+                            <input type="text" class="form-control" id="formSender" placeholder="Sender Full Name or Company" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Receiver Name</label>
+                            <input type="text" class="form-control" id="formReceiver" placeholder="Receiver Full Name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card form-section">
+                    <h2 class="form-section-title">Routing Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label required">Origin City</label>
+                            <input type="text" class="form-control" id="formOrigin" placeholder="e.g. Chennai, Bangalore, Mumbai" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Destination City</label>
+                            <input type="text" class="form-control" id="formDestination" placeholder="e.g. Delhi, Hyderabad, Pune" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('createShipmentForm').reset()">Clear</button>
+                    <button type="submit" class="btn btn-primary" id="submitShipmentBtn">🚀 Create Shipment</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- TRACKING -->
+        <section id="tracking" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Track & Trace Hub</h1>
+                    <p>Real-time package journey, transit stages, and milestone history.</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header" style="margin-bottom: 12px;">
+                    <h2 class="card-title">Search Shipment Tracking</h2>
+                    <div class="card-subtitle">Quick search by tracking code</div>
+                </div>
+                <div class="global-search" style="max-width: 100%; margin-bottom: 14px;">
+                    <i>🔍</i>
+                    <input type="text" id="trackSearchInput" placeholder="Enter Tracking Number (e.g. CF100248, CF100249, CT1001, CT1002)" onkeyup="if(event.key === 'Enter') executeTracking()">
+                    <button class="btn btn-primary" onclick="executeTracking()">Track</button>
+                </div>
+                <div style="font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span>Quick Try:</span>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK001')">TRK001 (Delivered)</button>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK002')">TRK002 (In Transit)</button>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK003')">TRK003 (Out for Delivery)</button>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK004')">TRK004 (Pending)</button>
+                </div>
+            </div>
+            
+            <div id="trackingResultArea">
+                <div class="card">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>Ready to Track</h3>
+                        <p>Enter any valid tracking number above or click on one of the quick samples.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COURIERS DIRECTORY -->
+        <section id="couriers" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Couriers Directory</h1>
+                    <p>Integrated domestic & international courier partners and fleet service metrics.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="loadCouriersDirectory()">🔄 Refresh Partners</button>
+            </div>
+
+            <div class="courier-grid" id="couriersGrid">
+                <!-- Dynamically populated via script -->
+            </div>
+        </section>
+
+        <!-- ANALYTICS HUB -->
+        <section id="analytics" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Analytics & Performance Hub</h1>
+                    <p>Comprehensive volume trends, delivery SLA performance, and partner logistics analysis.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="exportAnalyticsCSV()">📥 Export Analytics</button>
+                    <button class="btn btn-secondary" onclick="loadAnalyticsHub()">🔄 Refresh Analytics</button>
+                </div>
+            </div>
+
+            <!-- Date Filter Switcher -->
+            <div class="card" style="padding: 14px 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);">
+                        📅 Analytics Time Window:
+                    </div>
+                    <div class="tabs-container" style="border: none; margin: 0; padding: 0;">
+                        <button class="tab-btn" data-vrange="1" onclick="setVolumeRange(1, this)">Today</button>
+                        <button class="tab-btn active" data-vrange="7" onclick="setVolumeRange(7, this)">Last 7 Days</button>
+                        <button class="tab-btn" data-vrange="30" onclick="setVolumeRange(30, this)">Last 30 Days</button>
+                        <button class="tab-btn" data-vrange="90" onclick="setVolumeRange(90, this)">Last 90 Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 7 KPI Cards -->
+            <div class="stats-grid-7">
+                <div class="stat-card">
+                    <div class="stat-icon primary">📦</div>
+                    <div class="stat-info">
+                        <h3>Total Shipments</h3>
+                        <p id="anTotal">0</p>
+                        <div class="stat-meta"><span class="trend-badge positive">+14.2%</span> vs last month</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">🚚</div>
+                    <div class="stat-info">
+                        <h3>In Transit</h3>
+                        <p id="anTransit">0</p>
+                        <div class="stat-meta"><span class="trend-badge neutral">Active</span> on route</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">🛵</div>
+                    <div class="stat-info">
+                        <h3>Out for Delivery</h3>
+                        <p id="anOutDelivery">0</p>
+                        <div class="stat-meta"><span class="trend-badge positive">Final Mile</span> today</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">✅</div>
+                    <div class="stat-info">
+                        <h3>Delivered</h3>
+                        <p id="anDelivered">0</p>
+                        <div class="stat-meta"><span class="trend-badge positive">+9.8%</span> fulfilled</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Exceptions</h3>
+                        <p id="anExceptions">0</p>
+                        <div class="stat-meta"><span class="trend-badge negative">-1.5%</span> flagged items</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">🎯</div>
+                    <div class="stat-info">
+                        <h3>Success Rate</h3>
+                        <p id="anSuccessRate">0%</p>
+                        <div class="stat-meta"><span class="trend-badge positive">+2.1%</span> SLA target 95%</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon primary">⏱️</div>
+                    <div class="stat-info">
+                        <h3>Avg Delivery Time</h3>
+                        <p id="anAvgTime">2.3 d</p>
+                        <div class="stat-meta"><span class="trend-badge positive">-0.4 d</span> faster speed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1: Distribution & Volume -->
+            <div class="analytics-grid">
+                <!-- Chart 1: Shipment Status Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Chart 1: Shipment Status Distribution</h2>
+                            <div class="card-subtitle">Actual proportion of all consignments in database</div>
+                        </div>
+                    </div>
+                    <div class="doughnut-container">
+                        <div style="position: relative; width: 180px; height: 180px;">
+                            <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);" id="statusDoughnutSvg">
+                                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="3.5"></circle>
+                            </svg>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div id="doughnutCenterTotal" style="font-size: 22px; font-weight: 800; color: var(--text-main);">0</div>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Shipments</div>
+                            </div>
+                        </div>
+                        <div class="doughnut-legend" id="statusDoughnutLegend">
+                            <!-- Populated in JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Shipment Volume Trend -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Chart 2: Shipment Volume Trend</h2>
+                            <div class="card-subtitle">Volume distribution across selected window</div>
+                        </div>
+                    </div>
+                    <div class="bar-chart-container">
+                        <div class="bar-chart-bars" id="volumeBars">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2: Delivery & Route Performance -->
+            <div class="analytics-grid">
+                <!-- Chart 4: Delivery Performance -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Chart 4: Delivery Performance & SLA</h2>
+                            <div class="card-subtitle">Delivered on-time, transit velocity, and delays</div>
+                        </div>
+                    </div>
+                    <div id="deliveryPerformanceBars">
+                        <!-- Progress bars rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Chart 5: Route Performance -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Chart 5: Common Route Performance</h2>
+                            <div class="card-subtitle">Highest volume origin-to-destination corridors</div>
+                        </div>
+                    </div>
+                    <div id="topRoutesList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 3: Courier Partner Performance Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Chart 3: Courier Partner Performance</h2>
+                        <div class="card-subtitle">Consignments, fulfilled deliveries, and success rate per carrier</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Courier Partner</th>
+                                <th>Total Shipments</th>
+                                <th>Delivered</th>
+                                <th>In Transit</th>
+                                <th>Exceptions</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courierPerfTableBody">
+                            <!-- Populated in JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXCEPTIONS PAGE -->
+        <section id="exceptions" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Exceptions Center & SLA Alerts</h1>
+                    <p>Identify address blocks, delayed line-hauls, and failed delivery attempts.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="loadExceptionsPage()">🔄 Refresh</button>
+            </div>
+
+            <div class="exception-pills">
+                <div class="exception-pill-card">
+                    <h4>Address Issue</h4>
+                    <p id="exCountAddr">1</p>
+                    <span class="badge-high trend-badge" style="margin-top: 6px; width: fit-content;">Customer Contact</span>
+                </div>
+                <div class="exception-pill-card">
+                    <h4>Delayed Shipment</h4>
+                    <p id="exCountDelay">1</p>
+                    <span class="badge-critical trend-badge" style="margin-top: 6px; width: fit-content;">Hub Delay</span>
+                </div>
+                <div class="exception-pill-card">
+                    <h4>Delivery Attempt Failed</h4>
+                    <p id="exCountAttempt">1</p>
+                    <span class="badge-medium trend-badge" style="margin-top: 6px; width: fit-content;">Re-attempting</span>
+                </div>
+                <div class="exception-pill-card">
+                    <h4>Weather Delay</h4>
+                    <p id="exCountWeather">0</p>
+                    <span class="trend-badge neutral" style="margin-top: 6px; width: fit-content;">Cleared</span>
+                </div>
+                <div class="exception-pill-card">
+                    <h4>Customer Unavailable</h4>
+                    <p id="exCountUnavail">1</p>
+                    <span class="badge-medium trend-badge" style="margin-top: 6px; width: fit-content;">Rescheduling</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Flagged Shipments Requiring Intervention</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tracking #</th>
+                                <th>Courier</th>
+                                <th>Issue</th>
+                                <th>Last Update</th>
+                                <th>Current Location</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exceptionsTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOTIFICATIONS -->
+        <section id="notifications" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>Notification Center</h1>
+                    <p>Live operational alerts, courier dispatch updates, and delivery confirmations.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="markAllNotificationsAsRead()">Mark All as Read</button>
+                    <button class="btn btn-secondary" onclick="clearNotifications()">Clear All</button>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div class="tabs-container" style="padding: 12px 16px 0; margin-bottom: 0;">
+                    <button class="tab-btn active" data-ncat="ALL" onclick="setNotifCategory('ALL', this)">All</button>
+                    <button class="tab-btn" data-ncat="UNREAD" onclick="setNotifCategory('UNREAD', this)">Unread Notifications</button>
+                    <button class="tab-btn" data-ncat="SHIPMENT" onclick="setNotifCategory('SHIPMENT', this)">Shipment Updates</button>
+                    <button class="tab-btn" data-ncat="DELIVERY" onclick="setNotifCategory('DELIVERY', this)">Delivery Alerts</button>
+                    <button class="tab-btn" data-ncat="EXCEPTION" onclick="setNotifCategory('EXCEPTION', this)">Exception Alerts</button>
+                    <button class="tab-btn" data-ncat="SYSTEM" onclick="setNotifCategory('SYSTEM', this)">System Notifications</button>
+                </div>
+                <div id="notificationsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="settings" class="page-container">
+            <div class="page-header">
+                <div>
+                    <h1>System & Application Settings</h1>
+                    <p>Interface preferences, notification behavior, and system environment info.</p>
+                </div>
+            </div>
+
+            <div class="card form-section">
+                <h2 class="form-section-title">Interface Preferences</h2>
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <label class="form-label" style="margin: 0;">Compact Table View</label>
+                        <p class="text-muted" style="font-size: 12.5px;">Optimizes cell padding and fonts for dense data tables.</p>
+                    </div>
+                    <input type="checkbox" id="compactModeToggle" onchange="toggleCompactMode(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                </div>
+            </div>
+
+            <div class="card form-section">
+                <h2 class="form-section-title">Notification Alerts</h2>
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <label class="form-label" style="margin: 0;">Enable Interactive Toasts</label>
+                        <p class="text-muted" style="font-size: 12.5px;">Displays floating notifications for actions, edits and exports.</p>
+                    </div>
+                    <input type="checkbox" id="toastsToggle" onchange="toggleToasts(this.checked)" checked style="width: 18px; height: 18px; cursor: pointer;">
+                </div>
+            </div>
+
+            <div class="card form-section">
+                <h2 class="form-section-title">Backend & Database Infrastructure</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 13.5px;">
+                    <div style="background: var(--bg-main); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <strong style="color: var(--secondary); display: block; font-size: 11.5px; text-transform: uppercase;">Database Name</strong>
+                        <span style="font-weight: 700; color: var(--text-main);">courierdb</span>
+                    </div>
+                    <div style="background: var(--bg-main); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <strong style="color: var(--secondary); display: block; font-size: 11.5px; text-transform: uppercase;">Main Entity Table</strong>
+                        <span style="font-weight: 700; color: var(--text-main);">shipments</span>
+                    </div>
+                    <div style="background: var(--bg-main); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <strong style="color: var(--secondary); display: block; font-size: 11.5px; text-transform: uppercase;">Server Port</strong>
+                        <span style="font-weight: 700; color: var(--text-main);">8081</span>
+                    </div>
+                    <div style="background: var(--bg-main); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <strong style="color: var(--secondary); display: block; font-size: 11.5px; text-transform: uppercase;">REST API Status</strong>
+                        <span style="font-weight: 700; color: var(--success);">Online & Active</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- =========================================
+     MODALS
+     ========================================= -->
+
+<!-- VIEW SHIPMENT MODAL -->
+<div id="viewModal" class="modal-backdrop d-none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Shipment Overview</h3>
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+        </div>
+        <div class="modal-body" id="viewModalBody">
+            <!-- Populated via script -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('viewModal')">Close</button>
+            <button class="btn btn-primary" id="viewModalTrackBtn">Track In Real-Time</button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT SHIPMENT MODAL -->
+<div id="editModal" class="modal-backdrop d-none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Shipment Details</h3>
+            <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+        </div>
+        <form id="editShipmentForm" onsubmit="handleEditShipmentSubmit(event)">
+            <div class="modal-body">
+                <input type="hidden" id="editShipmentId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">Tracking Number</label>
+                        <input type="text" class="form-control" id="editTrackingNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Courier</label>
+                        <select class="form-control" id="editCourier" required>
+                            <option value="Blue Dart">Blue Dart</option>
+                            <option value="DTDC">DTDC</option>
+                            <option value="Delhivery">Delhivery</option>
+                            <option value="Ecom Express">Ecom Express</option>
+                            <option value="XpressBees">XpressBees</option>
+                            <option value="Shadowfax">Shadowfax</option>
+                            <option value="India Post">India Post</option>
+                            <option value="FedEx">FedEx</option>
+                            <option value="DHL">DHL</option>
+                            <option value="Ekart">Ekart</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">Status</label>
+                        <select class="form-control" id="editStatus" required>
+                            <option value="PENDING">Pending</option>
+                            <option value="IN_TRANSIT">In Transit</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="EXCEPTION">Exception</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estimated Delivery (ETA)</label>
+                        <input type="date" class="form-control" id="editEta">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">Sender Name</label>
+                        <input type="text" class="form-control" id="editSenderName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Receiver Name</label>
+                        <input type="text" class="form-control" id="editReceiverName" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">Origin</label>
+                        <input type="text" class="form-control" id="editOrigin" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Destination</label>
+                        <input type="text" class="form-control" id="editDestination" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="editSaveBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- COURIER DETAILS MODAL -->
+<div id="courierModal" class="modal-backdrop d-none">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="courierModalTitle">Partner Details</h3>
+            <button class="modal-close" onclick="closeModal('courierModal')">✕</button>
+        </div>
+        <div class="modal-body" id="courierModalBody">
+            <!-- Populated via script -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('courierModal')">Close</button>
+            <button class="btn btn-primary" onclick="showPage('shipments'); closeModal('courierModal');">View Partner Shipments</button>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="modal-backdrop d-none">
+    <div class="modal" style="max-width: 420px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Confirm Deletion</h3>
+            <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 14px; color: var(--text-main); margin-bottom: 8px;">
+                Are you sure you want to permanently delete shipment <strong id="deleteTargetTracking"></strong>?
+            </p>
+            <p style="font-size: 12.5px; color: var(--danger); margin: 0;">
+                ⚠️ This action calls the MySQL REST API and will remove the record permanently.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete Record</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
