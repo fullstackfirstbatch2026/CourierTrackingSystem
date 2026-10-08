@@ -37,6 +37,9 @@ CREATE TABLE PARCELS (
     status VARCHAR(50) DEFAULT 'PENDING',
     booking_date DATE,
     expected_delivery_date DATE,
+    courier VARCHAR(100),
+    sender_name VARCHAR(100),
+    receiver_name VARCHAR(100),
     FOREIGN KEY (customer_id) REFERENCES CUSTOMERS(customer_id),
     FOREIGN KEY (agent_id) REFERENCES DELIVERY_AGENTS(agent_id)
 );

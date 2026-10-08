@@ -29,7 +29,25 @@ public class Parcel {
     private LocalDate bookingDate;
     private LocalDate expectedDeliveryDate;
 
+    @Column(name = "courier", length = 100)
+    private String courier;
+
+    @Column(name = "sender_name")
+    private String senderName;
+
+    @Column(name = "receiver_name")
+    private String receiverName;
+
     // Getters and Setters
+    public String getSenderName() { return senderName; }
+    public void setSenderName(String senderName) { this.senderName = senderName; }
+    
+    public String getReceiverName() { return receiverName; }
+    public void setReceiverName(String receiverName) { this.receiverName = receiverName; }
+
+    public String getCourier() { return courier; }
+    public void setCourier(String courier) { this.courier = courier; }
+
     public Integer getParcelId() { return parcelId; }
     public void setParcelId(Integer parcelId) { this.parcelId = parcelId; }
     public String getTrackingNumber() { return trackingNumber; }

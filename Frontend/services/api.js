@@ -15,7 +15,7 @@ import {
 // API CONFIGURATION
 // Replace BASE_URL with your Spring Boot backend
 // =============================================
-const API_BASE_URL = "http://localhost:8081/api";
+const API_BASE_URL = "http://localhost:8082/api";
 const USE_MOCK_DATA = false;
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

@@ -446,8 +446,8 @@
                     <span>Quick Try:</span>
                     <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK001')">TRK001 (Delivered)</button>
                     <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK002')">TRK002 (In Transit)</button>
-                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK003')">TRK003 (Out for Delivery)</button>
-                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK004')">TRK004 (Pending)</button>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK004')">TRK004 (Out for Delivery)</button>
+                    <button class="btn-icon" style="padding: 2px 8px; font-size: 12px;" onclick="quickTrack('TRK003')">TRK003 (Pending)</button>
                 </div>
             </div>
             
@@ -474,6 +474,37 @@
 
             <div class="courier-grid" id="couriersGrid">
                 <!-- Dynamically populated via script -->
+            </div>
+
+            <!-- DELIVERY AGENTS & SUBQUERY (Requirement 2) -->
+            <div class="card" style="margin-top: 24px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 class="card-title">🛵 Active Delivery Agents (Database Agents)</h2>
+                        <div class="card-subtitle">Agents managed in MySQL DELIVERY_AGENTS table with subquery-based performance tags</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="loadDeliveryAgentsTable()">🔄 Refresh Agents</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Agent ID</th>
+                                <th>Agent Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Vehicle</th>
+                                <th>Status</th>
+                                <th>Performance (Subquery)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentsTableBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 18px;">Loading delivery agents...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
